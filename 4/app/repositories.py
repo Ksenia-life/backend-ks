@@ -1,0 +1,132 @@
+import csv
+
+from sqlalchemy import select, func, distinct
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Student
+
+
+class StudentRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create_student(
+        self,
+        last_name: str,
+        first_name: str,
+        faculty: str,
+        course: str,
+        grade: int,
+    ) -> Student:
+        student = Student(
+            last_name=last_name,
+            first_name=first_name,
+            faculty=faculty,
+            course=course,
+            grade=grade,
+        )
+        self.db.add(student)
+        await self.db.commit()
+        await self.db.refresh(student)
+        return student
+
+    async def get_all_students(self) -> list[Student]:
+        result = await self.db.execute(select(Student))
+        return list(result.scalars().all())
+
+    async def import_from_csv(self, file_path: str) -> dict:
+        rows_processed = 0
+
+        with open(file_path, "r", encoding="utf-8-sig", newline="") as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                last_name = row.get("Фамилия", "").strip()
+                first_name = row.get("Имя", "").strip()
+                faculty = row.get("Факультет", "").strip()
+                course = row.get("Курс", "").strip()
+                grade_value = row.get("Оценка", "").strip()
+
+                if not all([last_name, first_name, faculty, course, grade_value]):
+                    continue
+
+                student = Student(
+                    last_name=last_name,
+                    first_name=first_name,
+                    faculty=faculty,
+                    course=course,
+                    grade=int(grade_value),
+                )
+
+                self.db.add(student)
+                rows_processed += 1
+
+        await self.db.commit()
+
+        return {
+            "message": "CSV file imported successfully",
+            "rows_processed": rows_processed,
+        }
+
+    async def get_students_by_faculty(self, faculty_name: str) -> list[dict]:
+        stmt = (
+            select(Student)
+            .where(Student.faculty == faculty_name)
+            .order_by(Student.last_name, Student.first_name)
+        )
+
+        result = await self.db.execute(stmt)
+        students = result.scalars().all()
+
+        return [
+            {
+                "id": student.id,
+                "last_name": student.last_name,
+                "first_name": student.first_name,
+                "faculty": student.faculty,
+                "course": student.course,
+                "grade": student.grade,
+            }
+            for student in students
+        ]
+
+    async def get_unique_courses(self) -> list[str]:
+        stmt = select(distinct(Student.course)).order_by(Student.course)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_students_by_course_with_low_grades(self, course_name: str) -> list[dict]:
+        stmt = (
+            select(Student)
+            .where(Student.course == course_name, Student.grade < 30)
+            .order_by(Student.grade, Student.last_name, Student.first_name)
+        )
+
+        result = await self.db.execute(stmt)
+        students = result.scalars().all()
+
+        return [
+            {
+                "id": student.id,
+                "last_name": student.last_name,
+                "first_name": student.first_name,
+                "faculty": student.faculty,
+                "course": student.course,
+                "grade": student.grade,
+            }
+            for student in students
+        ]
+
+    async def get_average_grade_by_faculty(self, faculty_name: str) -> dict:
+        stmt = (
+            select(func.avg(Student.grade))
+            .where(Student.faculty == faculty_name)
+        )
+
+        result = await self.db.execute(stmt)
+        average_grade = result.scalar()
+
+        return {
+            "faculty": faculty_name,
+            "average_grade": round(float(average_grade), 2) if average_grade is not None else None,
+        }
