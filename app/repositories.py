@@ -34,6 +34,44 @@ class StudentRepository:
         result = await self.db.execute(select(Student))
         return list(result.scalars().all())
 
+    async def get_student_by_id(self, student_id: int) -> Student | None:
+        student = await self.db.get(Student, student_id)
+        return student
+
+    async def update_student(
+        self,
+        student_id: int,
+        last_name: str,
+        first_name: str,
+        faculty: str,
+        course: str,
+        grade: int,
+    ) -> Student | None:
+        student = await self.db.get(Student, student_id)
+
+        if student is None:
+            return None
+
+        student.last_name = last_name
+        student.first_name = first_name
+        student.faculty = faculty
+        student.course = course
+        student.grade = grade
+
+        await self.db.commit()
+        await self.db.refresh(student)
+        return student
+
+    async def delete_student(self, student_id: int) -> bool:
+        student = await self.db.get(Student, student_id)
+
+        if student is None:
+            return False
+
+        await self.db.delete(student)
+        await self.db.commit()
+        return True
+
     async def import_from_csv(self, file_path: str) -> dict:
         rows_processed = 0
 
@@ -118,10 +156,7 @@ class StudentRepository:
         ]
 
     async def get_average_grade_by_faculty(self, faculty_name: str) -> dict:
-        stmt = (
-            select(func.avg(Student.grade))
-            .where(Student.faculty == faculty_name)
-        )
+        stmt = select(func.avg(Student.grade)).where(Student.faculty == faculty_name)
 
         result = await self.db.execute(stmt)
         average_grade = result.scalar()
