@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.routes import router
+from app.auth_routes import router as auth_router
+from app.routes import router as student_router
 
 
 @asynccontextmanager
@@ -13,14 +14,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Homework 5 API",
-    description="FastAPI + SQLAlchemy + Alembic + CRUD",
+    title="Homework 7 API",
+    description="FastAPI + SQLAlchemy + Alembic + CRUD + Auth",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-app.include_router(router)
-
+app.include_router(auth_router)
+app.include_router(student_router)
 
 if __name__ == "__main__":
     import uvicorn

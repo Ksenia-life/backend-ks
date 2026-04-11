@@ -3,11 +3,15 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import get_current_user
 from app.database import get_db
 from app.repositories import StudentRepository
-from app.schemas import StudentCreate, StudentUpdate, StudentResponse
+from app.schemas import StudentCreate, StudentResponse, StudentUpdate
 
-router = APIRouter()
+router = APIRouter(
+    tags=["students"],
+    dependencies=[Depends(get_current_user)],
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CSV_FILE_PATH = BASE_DIR / "students.csv"
