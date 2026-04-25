@@ -14,8 +14,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Homework 7 API",
-    description="FastAPI + SQLAlchemy + Alembic + CRUD + Auth",
+    title="Homework 8 API",
+    description="FastAPI + SQLAlchemy + BackgroundTasks + Redis cache",
     version="1.0.0",
     lifespan=lifespan,
 )

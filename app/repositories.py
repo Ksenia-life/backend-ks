@@ -71,6 +71,25 @@ class StudentRepository:
         await self.db.delete(student)
         await self.db.commit()
         return True
+    
+    async def delete_students_by_ids(self, student_ids: list[int]) -> dict:
+        deleted_count = 0
+
+        for student_id in student_ids:
+            student = await self.db.get(Student, student_id)
+
+            if student is None:
+                continue
+
+            await self.db.delete(student)
+            deleted_count += 1
+
+        await self.db.commit()
+
+        return {
+            "message": "Students deleted successfully",
+            "deleted_count": deleted_count,
+        }
 
     async def import_from_csv(self, file_path: str) -> dict:
         rows_processed = 0

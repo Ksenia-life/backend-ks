@@ -45,3 +45,6 @@ class UserResponse(UserBase):
 class LoginResponse(BaseModel):
     message: str
     user_id: int
+    
+class StudentDeleteList(BaseModel):
+    student_ids: list[int]
