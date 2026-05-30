@@ -1,6 +1,13 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
 students.db
-archive/
-appeals/
+*.db
+.env
+.idea/
+.vscode/

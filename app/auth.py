@@ -1,18 +1,20 @@
-import hashlib
-
 from fastapi import Depends, Header, HTTPException, status
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.repositories import UserRepository
 
 
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    return password_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return hash_password(plain_password) == hashed_password
+    return password_context.verify(plain_password, hashed_password)
 
 
 async def get_current_user(

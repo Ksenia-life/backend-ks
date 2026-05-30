@@ -1,21 +1,35 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-from app.database import Base
 from app import models
+from app.core.config import DATABASE_URL
+from app.database import Base
+
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+
+def get_migration_url() -> str:
+    return (
+        DATABASE_URL
+        .replace("sqlite+aiosqlite", "sqlite")
+        .replace("postgresql+asyncpg", "postgresql")
+    )
+
+
+config.set_main_option("sqlalchemy.url", get_migration_url())
+
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
