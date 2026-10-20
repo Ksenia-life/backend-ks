@@ -1,7 +1,6 @@
 services:
   app:
     build: .
-    container_name: student_api
     command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
     ports:
       - "127.0.0.1:8000:8000"
@@ -16,13 +15,10 @@ services:
   
   db:
     image: postgres:16
-    container_name: student_db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,9 +29,6 @@ services:
 
   redis:
     image: redis:7
-    container_name: student_redis
-    ports:
-      - "127.0.0.1:6379:6379"
 
 volumes:
   postgres_data:
